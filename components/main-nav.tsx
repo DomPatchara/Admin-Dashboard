@@ -26,6 +26,18 @@ const MainNav = ({
       href: `/${storeId}/categories`,
     },
     {
+      label: "Sizes",
+      href: `/${storeId}/sizes`,
+    },
+    {
+      label: "Colors",
+      href: `/${storeId}/colors`,
+    },
+    {
+      label: "Products",
+      href: `/${storeId}/products`,
+    },
+    {
       label: "Settings",
       href: `/${storeId}/settings`,
     },

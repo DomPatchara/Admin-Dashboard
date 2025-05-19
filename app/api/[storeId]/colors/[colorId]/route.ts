@@ -3,44 +3,44 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 interface ParamsProps {
-  params: Promise<{ categoryId: string, storeId: string }>;
+  params: Promise<{ colorId: string, storeId: string }>;
 }
 
 // GET ---- Unique Category
 export const GET = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { categoryId } = await params;
+    const { colorId } = await params;
 
 
-    if (!categoryId) {
+    if (!colorId) {
       return NextResponse.json(
         { message: "Category ID is required" },
         { status: 400 }
       );
     }
 
-    const category = await prisma.category.findUnique({
+    const color = await prisma.color.findUnique({
       where: {
-        id: categoryId,
+        id: colorId,
       },
     });
 
-    return NextResponse.json(category);
+    return NextResponse.json(color);
   } catch (error) {
-    console.log("Category GET Unique", error);
+    console.log("Color GET Unique", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };
 
 
-// PATCH --- update billboard
+// PATCH --- update Color
 export const PATCH = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { storeId, categoryId } = await params;
+    const { storeId, colorId } = await params;
     const { userId } = await auth();
     const body = await req.json();
 
-    const { name, billboardId  } = body;
+    const { name, value  } = body;
 
     if (!userId) {
       return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
@@ -53,16 +53,16 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    if (!billboardId) {
+    if (!value) {
       return NextResponse.json(
-        { message: "Billboard ID is required" },
+        { message: "Value is required" },
         { status: 400 }
       );
     }
 
-    if (!categoryId) {
+    if (!colorId) {
       return NextResponse.json(
-        { message: "Category ID is required" },
+        { message: "Color ID is required" },
         { status: 400 }
       );
     }
@@ -80,20 +80,20 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
     }
     //--------------------------------------------------------------------------//
 
-    const category = await prisma.category.updateMany({
+    const color = await prisma.color.updateMany({
       where: {
-        id: categoryId,
+        id: colorId,
       },
       data: {
         // update
         name,
-        billboardId,
+        value,
       },
     });
 
-    return NextResponse.json(category);
+    return NextResponse.json(color);
   } catch (error) {
-    console.log("Category Patch", error);
+    console.log("Color Patch", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };
@@ -101,16 +101,16 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
 // DELETE ---- delete billboard
 export const DELETE = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { storeId, categoryId } = await params;
+    const { storeId, colorId } = await params;
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
     }
 
-    if (!categoryId) {
+    if (!colorId) {
       return NextResponse.json(
-        { message: "Category ID is required" },
+        { message: "Color ID is required" },
         { status: 400 }
       );
     }
@@ -126,15 +126,15 @@ export const DELETE = async (req: Request, { params }: ParamsProps) => {
       return NextResponse.json({ message: "Unauthorize" }, { status: 400 });
     }
 
-    const category = await prisma.category.deleteMany({
+    const color = await prisma.color.deleteMany({
       where: {
-        id: categoryId,
+        id: colorId,
       },
     });
 
-    return NextResponse.json(category);
+    return NextResponse.json(color);
   } catch (error) {
-    console.log("Category Delete", error);
+    console.log("Color Delete", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };

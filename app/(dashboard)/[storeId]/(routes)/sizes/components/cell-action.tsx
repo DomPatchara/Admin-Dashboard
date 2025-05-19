@@ -1,6 +1,6 @@
 "use-client";
 import { useState } from "react";
-import { BillboardColumn } from "./columns";
+import { SizeColumn } from "./columns";
 import axios from "axios";
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AlertModal } from "@/components/modals/alert-modal";
 
 interface Props {
-  data: BillboardColumn;
+  data: SizeColumn;
 }
 
 export const CellAction = ({ data }: Props) => {
@@ -30,19 +30,19 @@ export const CellAction = ({ data }: Props) => {
   // For Copy
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success("Billboard Id copied to the clipboard.");
+    toast.success("Size Id copied to the clipboard.");
   };
 
   // For Delete
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${storeId}/billboards/${data.id}`);
+      await axios.delete(`/api/${storeId}/sizes/${data.id}`);
       router.refresh();
-      toast.success("Billboard deleted.");
+      toast.success("Size deleted.");
     } catch (error) {
       toast.error(
-        "Make sure you removed all categories using this billboard first."
+        "Make sure you removed all size using this billboard first."
       );
     } finally {
       setLoading(false);
@@ -70,7 +70,7 @@ export const CellAction = ({ data }: Props) => {
             Actions
           </DropdownMenuLabel>
           <DropdownMenuItem
-            onClick={() => router.push(`/${storeId}/billboards/${data.id}`)}
+            onClick={() => router.push(`/${storeId}/sizes/${data.id}`)}
           >
             <Edit className="mr-2 h-4 w-4" />
             Update
