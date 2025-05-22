@@ -23,6 +23,9 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       where: {
         id: categoryId,
       },
+      include: {
+        billboard:true
+      }
     });
 
     return NextResponse.json(category);

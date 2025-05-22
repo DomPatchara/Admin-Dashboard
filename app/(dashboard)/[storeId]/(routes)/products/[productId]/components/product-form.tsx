@@ -33,7 +33,7 @@ import { AlertModal } from "@/components/modals/alert-modal";
 import ImageUpload from "@/components/ui/image-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// Zod --- define rule iuput
+// Zod --- define rule input
 const formSchema = z.object({
   name: z.string().min(1),
   images: z.object({ url: z.string() }).array(),
@@ -47,7 +47,6 @@ const formSchema = z.object({
 
 type ProductFormValues = z.infer<typeof formSchema>;
 
-// Typescript Product
 interface ProductFormProps {
   initialData:
     | (Product & {
@@ -59,15 +58,13 @@ interface ProductFormProps {
   sizes: Size[];
 }
 
-// ProductForm
 const ProductForm = ({
   initialData,
   categories,
   colors,
   sizes,
 }: ProductFormProps) => {
-  const { storeId, productId } = useParams(); // get storeId & productId  from  api/:storeId/products/:productId <----- dynamic route
-
+  const { storeId, productId } = useParams();
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
@@ -89,12 +86,15 @@ const ProductForm = ({
           name: "",
           images: [],
           price: 0,
+          categoryId: "",
           colorId: "",
           sizeId: "",
           isFeatured: false,
           isArchived: false,
         },
   });
+
+  const { setValue, getValues } = form;
 
   // onSubmit Function
   const onSubmit = async (data: ProductFormValues) => {
@@ -107,7 +107,7 @@ const ProductForm = ({
         await axios.post(`/api/${storeId}/products`, data);
       }
 
-      router.refresh(); // refresh page
+      router.refresh();
       router.push(`/${storeId}/products/`);
       toast.success(toastMessage);
     } catch (error) {
@@ -160,6 +160,7 @@ const ProductForm = ({
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-8 w-full"
         >
+          {/* Image Upload */}
           <FormField
             control={form.control}
             name="images"
@@ -167,16 +168,22 @@ const ProductForm = ({
               <FormItem>
                 <FormLabel>Background Image</FormLabel>
                 <FormControl>
-                  <ImageUpload // <---------------------------------------------- Upload Img Component from Cloundinary
+                  <ImageUpload
                     value={field.value.map((image) => image.url)}
                     disable={loading}
                     onChange={(url) =>
-                      field.onChange([...(field.value || []), { url }])
+                      setValue("images", [
+                        ...(getValues("images") || []),
+                        { url },
+                      ])
                     }
                     onRemove={(url) =>
-                      field.onChange([
-                        ...field.value.filter((image) => image.url !== url),
-                      ])
+                      setValue(
+                        "images",
+                        (getValues("images") || []).filter(
+                          (image) => image.url !== url
+                        )
+                      )
                     }
                   />
                 </FormControl>
@@ -184,7 +191,9 @@ const ProductForm = ({
               </FormItem>
             )}
           />
+
           <div className="grid grid-cols-3 gap-8">
+            {/* Product Name */}
             <FormField
               control={form.control}
               name="name"
@@ -203,7 +212,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** Price */}
+            {/* Price */}
             <FormField
               control={form.control}
               name="price"
@@ -223,7 +232,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** Select Category  */}
+            {/* Category */}
             <FormField
               control={form.control}
               name="categoryId"
@@ -258,7 +267,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** Select Size */}
+            {/* Size */}
             <FormField
               control={form.control}
               name="sizeId"
@@ -293,7 +302,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** Select Color */}
+            {/* Color */}
             <FormField
               control={form.control}
               name="colorId"
@@ -327,7 +336,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** isFeatured */}
+            {/* isFeatured */}
             <FormField
               control={form.control}
               name="isFeatured"
@@ -349,7 +358,7 @@ const ProductForm = ({
               )}
             />
 
-            {/** isArchived */}
+            {/* isArchived */}
             <FormField
               control={form.control}
               name="isArchived"

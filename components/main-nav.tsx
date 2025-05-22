@@ -38,6 +38,10 @@ const MainNav = ({
       href: `/${storeId}/products`,
     },
     {
+      label: "Orders",
+      href: `/${storeId}/orders`,
+    },
+    {
       label: "Settings",
       href: `/${storeId}/settings`,
     },
