@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prismadb";
 
 
 interface StoreIdProps { 
-    params: { storeId : string }
+    params: Promise<{ storeId : string }>
 }
 
 export const POST = async(req: Request, { params } : StoreIdProps) => {
     try {
         
-        const { storeId } = params
+        const { storeId } = await params
         const { userId } = await auth();  // userid generate from Clerk
         const body = await req.json()
 
@@ -65,7 +65,7 @@ export const POST = async(req: Request, { params } : StoreIdProps) => {
 export const GET = async(req: Request, { params } : StoreIdProps) => {
     try {
         
-        const { storeId } = params
+        const { storeId } = await params
 
 
         if(!storeId) {
