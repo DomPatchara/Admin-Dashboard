@@ -83,6 +83,7 @@ const SizeForm = ({ initialData }: SizeFormProps) => {
       toast.success("Size deleted.");
     } catch (error) {
       toast.error("Make sure you removed all product using this size first.");
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

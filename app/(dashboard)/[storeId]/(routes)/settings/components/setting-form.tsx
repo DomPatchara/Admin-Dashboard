@@ -58,6 +58,7 @@ const SettingForm = ({ initialData }: SettingFormProps) => {
       toast.success("Store updated.");
     } catch (error) {
       toast.error("Something went wrong !");
+      console.error(error);
     } finally {
       setLoading(false);
     }

@@ -6,8 +6,7 @@ import { usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 
 const MainNav = ({
-  className,
-  ...props
+  className
 }: React.HTMLAttributes<HTMLElement>) => {
   const pathname = usePathname();
   const { storeId } = useParams();

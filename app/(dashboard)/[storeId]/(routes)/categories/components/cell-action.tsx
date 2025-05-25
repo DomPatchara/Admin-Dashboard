@@ -39,11 +39,12 @@ export const CellAction = ({ data }: Props) => {
       setLoading(true);
       await axios.delete(`/api/${storeId}/categories/${data.id}`);
       router.refresh();
-      toast.success("Category deleted.");
+      toast.success("Category deleted.")
     } catch (error) {
       toast.error(
         "Make sure you removed all categories using this billboard first."
       );
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

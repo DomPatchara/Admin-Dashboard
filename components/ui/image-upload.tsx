@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./button";
 import { ImagePlus, Trash } from "lucide-react";
 import Image from "next/image";
-import { CldUploadWidget } from "next-cloudinary";
+import { CldUploadWidget, CloudinaryUploadWidgetResults } from "next-cloudinary";
 
 interface ImageUplaodProps {
   value: string[];
@@ -31,9 +31,18 @@ const ImageUpload = ({
     return null;
   }
 
-  const onUpload = (result: any) => {
-    const url = result.info.secure_url;
-    onChange(url);
+
+
+  const onUpload = (result: CloudinaryUploadWidgetResults) => {
+    let url = "";
+    if (typeof result.info === "string") {
+      url = result.info;
+    } else if (typeof result.info === "object" && result.info && "secure_url" in result.info) {
+      url = (result.info as { secure_url: string }).secure_url;
+    }
+    if (url) {
+      onChange(url);
+    }
   };
 
   return (

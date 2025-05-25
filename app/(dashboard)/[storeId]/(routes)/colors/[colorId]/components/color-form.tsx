@@ -84,6 +84,7 @@ const ColorForm = ({ initialData }: ColorFormProps) => {
       toast.success("Color deleted.");
     } catch (error) {
       toast.error("Make sure you removed all product using this color first.");
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

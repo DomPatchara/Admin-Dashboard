@@ -44,6 +44,7 @@ export const CellAction = ({ data }: Props) => {
       toast.error(
         "Make sure you removed all size using this billboard first."
       );
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);
