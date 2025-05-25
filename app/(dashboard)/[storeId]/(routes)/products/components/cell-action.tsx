@@ -1,5 +1,5 @@
 "use-client";
-import Reac, { useState } from "react";
+import { useState } from "react";
 import { ProductColumn } from "./columns";
 import axios from "axios";
 import {

@@ -84,6 +84,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
       toast.success("Billboard deleted.");
     } catch (error) {
       toast.error("Make sure you removed all categories using this billboard first.");
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

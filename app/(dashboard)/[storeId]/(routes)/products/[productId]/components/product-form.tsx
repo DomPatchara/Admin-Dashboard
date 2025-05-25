@@ -127,6 +127,7 @@ const ProductForm = ({
       toast.success("Product deleted.");
     } catch (error) {
       toast.error("Somethind went wrong. !!");
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

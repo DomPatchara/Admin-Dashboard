@@ -93,6 +93,7 @@ const CategoryForm = ({ initialData, billboards }: CategoryFormProps) => {
       toast.error(
         "Make sure you removed all products using this category first."
       );
+      console.error(error);
     } finally {
       setLoading(false);
       setOpen(false);

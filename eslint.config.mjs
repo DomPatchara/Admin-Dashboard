@@ -10,6 +10,15 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    // 👇 Ignore unwanted paths like .next or Prisma generated files
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "lib/generated/**", // <== adjust this path based on your Prisma output
+      "prisma/**",         // <== optional, if you don’t want to lint prisma schema/migrations
+    ],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
 

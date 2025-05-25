@@ -1,9 +1,10 @@
 'use client'
 
+import { GraphData } from "@/actions/get-graph-revenue.ts";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis  } from "recharts"
 
 interface OverviewProps {
-    data: any[];
+    data: GraphData[];
 }
 
 const Overview = ({data}:OverviewProps) => {
