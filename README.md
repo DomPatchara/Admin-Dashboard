@@ -12,7 +12,9 @@
 
 ## 🎯 Live Demo
 - Admin : https://admin-dashboard-rho-eight-40.vercel.app/
-- Store : https://e-commerce-store-ashy-six.vercel.app/
+- Store : https://e-commerce-store-ashy-six.vercel.app/   ----> (This store is linked with my specific  `Account_ID` and `Billboard_ID`)
+
+
 
 ## 📷 Screen Shot
 ![image](https://github.com/user-attachments/assets/79ee2210-4dc0-459c-a515-96f0d34eb3d8)
