@@ -4,14 +4,14 @@ import { NextResponse } from "next/server";
 
 
 interface ParamsProps {
-    params: { storeId : string}
+    params: Promise<{ storeId : string}>
 }
 
 
 // PATCH --- update store
 export const PATCH = async(req: Request, {params}: ParamsProps) => {
     try {
-        const { storeId } = params
+        const { storeId } = await params
         const { userId } = await auth();
         const body = await req.json();
 
@@ -46,7 +46,7 @@ export const PATCH = async(req: Request, {params}: ParamsProps) => {
 // DELETE ---- delete store
 export const DELETE = async(req:Request, {params}: ParamsProps) => {
     try {
-        const { storeId } = params
+        const { storeId } = await params
         const { userId } = await auth();
 
         if(!userId) {
