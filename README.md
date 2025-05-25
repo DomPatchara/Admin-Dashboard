@@ -1,5 +1,5 @@
 # Admin Dashboard + Store
-  A full-stack eCommerce platform with an admin dashboard for managing products, categories, orders, and users. Built with Next.js, Tailwind CSS, and Shadcn UI for a sleek UI. Integrated with Prisma and MongoDB for robust data handling, Stripe for secure payments, and Clerk for authentication.
+  A full-stack eCommerce platform with an admin dashboard for managing products, categories, orders, and users. Built with Next.js, Tailwind CSS, and Shadcn UI for modern UI. Integrated with Prisma and MongoDB for data handling, Stripe for secure payments, and Clerk for authentication.
   
 ## 🛠 Tech Stack
 - Next.js
