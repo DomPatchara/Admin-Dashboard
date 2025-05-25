@@ -3,13 +3,13 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 interface ParamsProps {
-  params: { storeId: string; billboardId: string };
+  params: Promise<{ storeId: string; billboardId: string }>;
 }
 
 // GET ---- one billboard
 export const GET = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { billboardId } = params;
+    const { billboardId } = await params;
     // const { userId } = await auth();
 
     // if (!userId) {
@@ -40,7 +40,7 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
 // PATCH --- update billboard
 export const PATCH = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { storeId, billboardId } = params;
+    const { storeId, billboardId } = await params;
     const { userId } = await auth();
     const body = await req.json();
 
@@ -103,7 +103,7 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
 // DELETE ---- delete billboard
 export const DELETE = async (req: Request, { params }: ParamsProps) => {
   try {
-    const { storeId, billboardId } = params;
+    const { storeId, billboardId } = await params;
     const { userId } = await auth();
 
     if (!userId) {
