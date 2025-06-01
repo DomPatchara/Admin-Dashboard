@@ -11,7 +11,7 @@
 - Clerk (Auth)
 
 ## 🎯 Live Demo
-- Admin : https://admin-dashboard-rho-eight-40.vercel.app/
+- Admin : https://admin-dashboard-zeta-virid-kxhqimrkkj.vercel.app
 - Store : https://e-commerce-store-ashy-six.vercel.app/   ----> (This store is linked with my specific  `Account_ID` and `Billboard_ID`)
 
 
