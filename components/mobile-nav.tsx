@@ -4,12 +4,16 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { usePathname, useParams } from "next/navigation";
 import Link from "next/link";
+import { Menu } from "lucide-react";
+import { X } from 'lucide-react';
+import { useState } from "react";
 
-const MainNav = ({ className }: React.HTMLAttributes<HTMLElement>) => {
+const MobileNav = ({ className }: React.HTMLAttributes<HTMLElement>) => {
   const pathname = usePathname();
   const { storeId } = useParams();
 
-const routes = [
+  const [isOpen, setIsOpen] = useState(false);
+  const routes = [
     {
       label: "Overview",
       href: `/${storeId}/`,
@@ -45,18 +49,30 @@ const routes = [
   ];
   return (
     <>
+      <div 
+      onClick={()=>setIsOpen(true)}
+      className="lg:hidden block mr-2 cursor-pointer p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-color duration-300">
+        <Menu />
+      </div>
+      
       <nav
         className={cn(
-          "hidden lg:flex items-center space-x-4 lg:space-x-6",
-          className
+          "absolute top-0 bottom-0 left-0 -translate-x-70 dark:bg-black bg-gray-100 px-20 lg:hidden flex flex-col items-center justify-center space-y-6 z-10 transition-all duration-500",
+          isOpen ? "translate-x-0" : "-translate-x-70"
         )}
       >
+        <div 
+        onClick={()=>setIsOpen(false)}
+        className="absolute top-2 right-2 cursor-pointer p-1 bg-gray-300 hover:bg-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full">
+            <X size={25} />
+        </div>
         {routes.map((route, index) => (
           <Link
+            onClick={()=>setIsOpen(false)}
             key={index}
             href={route.href}
             className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
+              "text-lg font-medium transition-colors hover:text-primary",
               pathname === route.href
                 ? "text-black dark:text-white"
                 : "text-muted-foreground"
@@ -70,4 +86,4 @@ const routes = [
   );
 };
 
-export default MainNav;
+export default MobileNav;

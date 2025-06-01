@@ -1,4 +1,4 @@
-"use-client";
+"use client";
 import { useState } from "react";
 import { ColorColumn } from "./columns";
 import axios from "axios";

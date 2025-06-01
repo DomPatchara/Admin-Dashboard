@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   params: Promise<{ storeId: string }>;
 }) {
   const { userId } = await auth();
-  const { storeId } = await params;
+  const { storeId } =  await params;
 
   if (!userId) {
     redirect('/sign-in');

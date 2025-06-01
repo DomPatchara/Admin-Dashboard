@@ -6,6 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prismadb";
 import { ModeToggle } from "./theme-toggle";
+import MobileNav from "./mobile-nav";
+
 
 const Navbar = async () => {
 
@@ -24,6 +26,7 @@ const Navbar = async () => {
   return (
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
+        <MobileNav/>
         <StoreSwitcher items={stores}/>
         <MainNav className="mx-6" />
         <div className="ml-auto flex items-center space-x-4">
