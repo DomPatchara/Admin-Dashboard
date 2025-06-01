@@ -8,7 +8,7 @@ import { Menu } from "lucide-react";
 import { X } from 'lucide-react';
 import { useState } from "react";
 
-const MobileNav = ({ className }: React.HTMLAttributes<HTMLElement>) => {
+const MobileNav = () => {
   const pathname = usePathname();
   const { storeId } = useParams();
 
