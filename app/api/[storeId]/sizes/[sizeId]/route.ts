@@ -1,16 +1,16 @@
 import { prisma } from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { redis } from "@/lib/redis";
 
 interface ParamsProps {
-  params: Promise<{ sizeId: string, storeId: string }>;
+  params: Promise<{ sizeId: string; storeId: string }>;
 }
 
 // GET ---- Unique Category
 export const GET = async (req: Request, { params }: ParamsProps) => {
   try {
     const { sizeId } = await params;
-
 
     if (!sizeId) {
       return NextResponse.json(
@@ -19,19 +19,28 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    const size = await prisma.size.findUnique({
-      where: {
-        id: sizeId,
-      },
-    });
+    const cached = await redis.get(`sizes:${sizeId}`);
+    if (cached) {
+      console.log("Redis: Cache Hit !");
+      return NextResponse.json(cached);
+    } else {
+      const size = await prisma.size.findUnique({
+        where: {
+          id: sizeId,
+        },
+      });
+      console.log("Redis: Cache Miss !");
+      await redis.set(`sizes:${sizeId}`, JSON.stringify(size), { ex: 300 });
 
-    return NextResponse.json(size);
+      console.log("Redis: Cache set Done !");
+
+      return NextResponse.json(size);
+    }
   } catch (error) {
     console.log("Size GET Unique", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };
-
 
 // PATCH --- update Size
 export const PATCH = async (req: Request, { params }: ParamsProps) => {
@@ -40,7 +49,7 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
     const { userId } = await auth();
     const body = await req.json();
 
-    const { name, value  } = body;
+    const { name, value } = body;
 
     if (!userId) {
       return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });

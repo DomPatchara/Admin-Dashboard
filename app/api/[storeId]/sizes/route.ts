@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prismadb";
+import { redis } from "@/lib/redis";
 
 
 interface StoreIdProps { 
@@ -73,13 +74,23 @@ export const GET = async(req: Request, { params } : StoreIdProps) => {
             return NextResponse.json({message: "Store id is require"}, { status: 400 })
         }
 
-        const sizes = await prisma.size.findMany({
-            where: {
-                storeId: storeId,   
-            }
-        })
 
-        return NextResponse.json(sizes);
+        const cached = await redis.get("sizes");
+            if (cached) {
+              console.log("Redis: Cache Hit !");
+              return NextResponse.json(cached);
+            } else { 
+                 console.log("Redis: Cache Miss !");
+                const sizes = await prisma.size.findMany({
+                    where: {
+                        storeId: storeId,   
+                    }
+                })
+                
+                await redis.set("sizes", JSON.stringify(sizes), { ex: 300 })
+                 console.log("Redis: Cache Set Done !");
+                return NextResponse.json(sizes);
+            } 
         
     } catch (error) {
         console.log("Sizes Get", error);

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { redis } from "@/lib/redis";
 
 interface ParamsProps {
   params: Promise<{ storeId: string; billboardId: string }>;
@@ -10,11 +11,6 @@ interface ParamsProps {
 export const GET = async (req: Request, { params }: ParamsProps) => {
   try {
     const { billboardId } = await params;
-    // const { userId } = await auth();
-
-    // if (!userId) {
-    //   return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
-    // }
 
     if (!billboardId) {
       return NextResponse.json(
@@ -23,19 +19,26 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    const billboard = await prisma.billboard.findUnique({
-      where: {
-        id: billboardId,
-      },
-    });
-
-    return NextResponse.json(billboard);
+    const cached = await redis.get(`billboards:${billboardId}`);
+    if (cached) {
+      console.log("Redis: Cache Hit !");
+      return NextResponse.json(cached);
+    } else {
+      const billboard = await prisma.billboard.findUnique({
+        where: {
+          id: billboardId,
+        },
+      });
+      console.log("Redis: Cache Miss !");
+      await redis.set(`billboards:${billboardId}`, JSON.stringify(billboard), { ex: 300 })
+      console.log("Redis: Cache set Done !");
+      return NextResponse.json(billboard);
+    }
   } catch (error) {
     console.log("Billboard GET", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };
-
 
 // PATCH --- update billboard
 export const PATCH = async (req: Request, { params }: ParamsProps) => {

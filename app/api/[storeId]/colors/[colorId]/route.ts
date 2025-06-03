@@ -1,16 +1,15 @@
 import { prisma } from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
+import { redis } from "@/lib/redis";
 interface ParamsProps {
-  params: Promise<{ colorId: string, storeId: string }>;
+  params: Promise<{ colorId: string; storeId: string }>;
 }
 
 // GET ---- Unique Category
 export const GET = async (req: Request, { params }: ParamsProps) => {
   try {
     const { colorId } = await params;
-
 
     if (!colorId) {
       return NextResponse.json(
@@ -19,19 +18,29 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    const color = await prisma.color.findUnique({
-      where: {
-        id: colorId,
-      },
-    });
+    const cached = await redis.get(`colors:${colorId}`);
+    if (cached) {
+      console.log("Redis: Cache Hit !");
+      return NextResponse.json(cached);
+    } else {
+      console.log("Redis: Cache Miss !");
+      
+      const color = await prisma.color.findUnique({
+        where: {
+          id: colorId,
+        },
+      });
 
-    return NextResponse.json(color);
+      await redis.set(`colors:${colorId}`, JSON.stringify(color), { ex: 300 });
+      console.log("Redis: Cache set done");
+
+      return NextResponse.json(color);
+    }
   } catch (error) {
     console.log("Color GET Unique", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 };
-
 
 // PATCH --- update Color
 export const PATCH = async (req: Request, { params }: ParamsProps) => {
@@ -40,7 +49,7 @@ export const PATCH = async (req: Request, { params }: ParamsProps) => {
     const { userId } = await auth();
     const body = await req.json();
 
-    const { name, value  } = body;
+    const { name, value } = body;
 
     if (!userId) {
       return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });

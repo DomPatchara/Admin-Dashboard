@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { redis } from "@/lib/redis";
 
 interface ParamsProps {
   params: Promise<{ storeId: string; productId: string }>;
@@ -17,21 +18,37 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
         { status: 400 }
       );
     }
+      // Cache (n.): a place where data is stored temporarily for quick access
+      
+     // get data from Cache (Redis)
+    const cached = await redis.get(`products:${productId}`);
 
-    const product = await prisma.product.findUnique({
-      where: {
-        id: productId,
-      },
-      include: {
-        images: true,
-        category: true,
-        size: true,
-        color: true,
+    if (cached) {
+      console.log("Redis: Cache Hit !");
+      return NextResponse.json(cached);
+    } else {
+      console.log("Redis: Cache Miss");
 
-      }
-    });
+      const product = await prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+        include: {
+          images: true,
+          category: true,
+          size: true,
+          color: true,
+  
+        }
+      });
 
-    return NextResponse.json(product);
+       // Store data in Cache --- หมดอายุ 5 นาที ( Redis )
+      await redis.set(`products:${productId}`, JSON.stringify(product), { ex: 300 });
+      console.log("Redis: Cache set done");
+
+      return NextResponse.json(product);
+
+    }
   } catch (error) {
     console.log("Product GET", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

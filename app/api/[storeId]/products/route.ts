@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prismadb";
+import { redis } from "@/lib/redis";
 
 interface StoreIdProps {
   params: Promise<{ storeId: string }>;
@@ -8,7 +9,7 @@ interface StoreIdProps {
 
 export const POST = async (req: Request, { params }: StoreIdProps) => {
   try {
-    const { storeId } =await params;
+    const { storeId } = await params;
     const { userId } = await auth(); // userid generate from Clerk
     const body = await req.json();
 
@@ -87,9 +88,7 @@ export const POST = async (req: Request, { params }: StoreIdProps) => {
         colorId,
         images: {
           createMany: {
-            data: [
-              ...images.map((image: { url: string }) => image),
-            ],
+            data: [...images.map((image: { url: string }) => image)],
           },
         },
         sizeId,
@@ -115,10 +114,10 @@ export const GET = async (req: Request, { params }: StoreIdProps) => {
     const { storeId } = await params;
 
     const { searchParams } = new URL(req.url);
-    const categoryId = searchParams.get("categoryId") || undefined
-    const colorId = searchParams.get("colorId") || undefined
-    const sizeId = searchParams.get("sizeId") || undefined
-    const isFeatured = searchParams.get("isFeatured") || undefined
+    const categoryId = searchParams.get("categoryId") || undefined;
+    const colorId = searchParams.get("colorId") || undefined;
+    const sizeId = searchParams.get("sizeId") || undefined;
+    const isFeatured = searchParams.get("isFeatured") || undefined;
 
     if (!storeId) {
       return NextResponse.json(
@@ -127,27 +126,42 @@ export const GET = async (req: Request, { params }: StoreIdProps) => {
       );
     }
 
-    const products = await prisma.product.findMany({
-      where: {
-        storeId: storeId,
-        categoryId,
-        colorId,
-        sizeId,
-        isFeatured: isFeatured ?  true : undefined,
-        isArchived: false
-      },
-      include: {
-        images: true,
-        category: true,
-        color: true,
-        size: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const cacheKey = `products:${storeId}:${categoryId}:${colorId}:${sizeId}:${isFeatured}`;
+    // Try to get from cache (Redis)
+    const cached = await redis.get(cacheKey);
 
-    return NextResponse.json(products);
+    if (cached) {
+      console.log("Redis: Cache Hit !");
+      return NextResponse.json(cached);
+    } else {
+      console.log("Redis: Cache Miss");
+      // Query from Database
+      const products = await prisma.product.findMany({
+        where: {
+          storeId: storeId,
+          categoryId,
+          colorId,
+          sizeId,
+          isFeatured: isFeatured ? true : undefined,
+          isArchived: false,
+        },
+        include: {
+          images: true,
+          category: true,
+          color: true,
+          size: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      // Store result in Redis with a TTL (e.g., 5 min)
+      await redis.set(cacheKey, JSON.stringify(products), { ex: 300 });
+      console.log("Redis: Cache set done");
+
+      return NextResponse.json(products);
+    }
   } catch (error) {
     console.log("Products Get", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
