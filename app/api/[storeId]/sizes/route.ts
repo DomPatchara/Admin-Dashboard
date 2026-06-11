@@ -75,22 +75,31 @@ export const GET = async(req: Request, { params } : StoreIdProps) => {
         }
 
 
-        const cached = await redis.get("sizes");
-            if (cached) {
-              console.log("Redis: Cache Hit !");
-              return NextResponse.json(cached);
-            } else { 
-                 console.log("Redis: Cache Miss !");
-                const sizes = await prisma.size.findMany({
-                    where: {
-                        storeId: storeId,   
-                    }
-                })
-                
-                await redis.set("sizes", JSON.stringify(sizes), { ex: 300 })
-                 console.log("Redis: Cache Set Done !");
-                return NextResponse.json(sizes);
-            } 
+        try {
+          const cached = await redis.get("sizes");
+          if (cached) {
+            console.log("Redis: Cache Hit !");
+            return NextResponse.json(cached);
+          }
+          console.log("Redis: Cache Miss !");
+        } catch (redisError) {
+          console.log("Redis error, falling back to DB:", redisError);
+        }
+
+        const sizes = await prisma.size.findMany({
+          where: {
+            storeId: storeId,
+          },
+        });
+
+        try {
+          await redis.set("sizes", JSON.stringify(sizes), { ex: 300 });
+          console.log("Redis: Cache Set Done !");
+        } catch (redisError) {
+          console.log("Redis set error:", redisError);
+        }
+
+        return NextResponse.json(sizes);
         
     } catch (error) {
         console.log("Sizes Get", error);

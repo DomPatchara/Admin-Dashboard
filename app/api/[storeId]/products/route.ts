@@ -127,41 +127,45 @@ export const GET = async (req: Request, { params }: StoreIdProps) => {
     }
 
     const cacheKey = `products:${storeId}:${categoryId}:${colorId}:${sizeId}:${isFeatured}`;
-    // Try to get from cache (Redis)
-    const cached = await redis.get(cacheKey);
-
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss");
-      // Query from Database
-      const products = await prisma.product.findMany({
-        where: {
-          storeId: storeId,
-          categoryId,
-          colorId,
-          sizeId,
-          isFeatured: isFeatured ? true : undefined,
-          isArchived: false,
-        },
-        include: {
-          images: true,
-          category: true,
-          color: true,
-          size: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
+    }
 
-      // Store result in Redis with a TTL (e.g., 5 min)
+    const products = await prisma.product.findMany({
+      where: {
+        storeId: storeId,
+        categoryId,
+        colorId,
+        sizeId,
+        isFeatured: isFeatured ? true : undefined,
+        isArchived: false,
+      },
+      include: {
+        images: true,
+        category: true,
+        color: true,
+        size: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    try {
       await redis.set(cacheKey, JSON.stringify(products), { ex: 300 });
       console.log("Redis: Cache set done");
-
-      return NextResponse.json(products);
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
     }
+
+    return NextResponse.json(products);
   } catch (error) {
     console.log("Products Get", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

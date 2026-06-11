@@ -20,26 +20,34 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-     const cached = await redis.get(`categories:${categoryId}`);
-        if (cached) {
-          console.log("Redis: Cache Hit !");
-          return NextResponse.json(cached);
-        } else { 
-          console.log("Redis: Cache Miss !");
-          const category = await prisma.category.findUnique({
-            where: {
-              id: categoryId,
-            },
-            include: {
-              billboard:true
-            }
-          });
-      
-          await redis.set(`categories:${categoryId}`, JSON.stringify(category), { ex: 300 })
-          console.log("Redis: Cache set Done !");
-          return NextResponse.json(category);
-          
-        }
+    try {
+      const cached = await redis.get(`categories:${categoryId}`);
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
+      console.log("Redis: Cache Miss !");
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
+    }
+
+    const category = await prisma.category.findUnique({
+      where: {
+        id: categoryId,
+      },
+      include: {
+        billboard: true,
+      },
+    });
+
+    try {
+      await redis.set(`categories:${categoryId}`, JSON.stringify(category), { ex: 300 });
+      console.log("Redis: Cache set Done !");
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
+    }
+
+    return NextResponse.json(category);
   } catch (error) {
     console.log("Category GET Unique", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

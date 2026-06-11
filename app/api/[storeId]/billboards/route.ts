@@ -81,23 +81,31 @@ export const GET = async (req: Request, { params }: StoreIdProps) => {
       );
     }
 
-    const cached = await redis.get("billboards");
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
+    try {
+      const cached = await redis.get("billboards");
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss !");
-      const billboard = await prisma.billboard.findMany({
-        where: {
-          storeId: storeId,
-        },
-      });
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
+    }
 
+    const billboard = await prisma.billboard.findMany({
+      where: {
+        storeId: storeId,
+      },
+    });
+
+    try {
       await redis.set("billboards", JSON.stringify(billboard), { ex: 300 });
       console.log("Redis: Cache set done !");
-
-      return NextResponse.json(billboard);
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
     }
+
+    return NextResponse.json(billboard);
   } catch (error) {
     console.log("Billboard Get", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

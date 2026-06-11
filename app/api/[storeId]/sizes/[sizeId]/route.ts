@@ -19,23 +19,31 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    const cached = await redis.get(`sizes:${sizeId}`);
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
-      const size = await prisma.size.findUnique({
-        where: {
-          id: sizeId,
-        },
-      });
+    try {
+      const cached = await redis.get(`sizes:${sizeId}`);
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss !");
-      await redis.set(`sizes:${sizeId}`, JSON.stringify(size), { ex: 300 });
-
-      console.log("Redis: Cache set Done !");
-
-      return NextResponse.json(size);
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
     }
+
+    const size = await prisma.size.findUnique({
+      where: {
+        id: sizeId,
+      },
+    });
+
+    try {
+      await redis.set(`sizes:${sizeId}`, JSON.stringify(size), { ex: 300 });
+      console.log("Redis: Cache set Done !");
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
+    }
+
+    return NextResponse.json(size);
   } catch (error) {
     console.log("Size GET Unique", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

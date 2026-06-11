@@ -19,21 +19,31 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
       );
     }
 
-    const cached = await redis.get(`billboards:${billboardId}`);
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
-      const billboard = await prisma.billboard.findUnique({
-        where: {
-          id: billboardId,
-        },
-      });
+    try {
+      const cached = await redis.get(`billboards:${billboardId}`);
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss !");
-      await redis.set(`billboards:${billboardId}`, JSON.stringify(billboard), { ex: 300 })
-      console.log("Redis: Cache set Done !");
-      return NextResponse.json(billboard);
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
     }
+
+    const billboard = await prisma.billboard.findUnique({
+      where: {
+        id: billboardId,
+      },
+    });
+
+    try {
+      await redis.set(`billboards:${billboardId}`, JSON.stringify(billboard), { ex: 300 });
+      console.log("Redis: Cache set Done !");
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
+    }
+
+    return NextResponse.json(billboard);
   } catch (error) {
     console.log("Billboard GET", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

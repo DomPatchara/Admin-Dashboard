@@ -78,22 +78,31 @@ export const GET = async (req: Request, { params }: StoreIdProps) => {
       );
     }
 
-    const cached = await redis.get("categories");
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
+    try {
+      const cached = await redis.get("categories");
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss !");
-      const category = await prisma.category.findMany({
-        where: {
-          storeId: storeId,
-        },
-      });
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
+    }
 
+    const category = await prisma.category.findMany({
+      where: {
+        storeId: storeId,
+      },
+    });
+
+    try {
       await redis.set("categories", JSON.stringify(category), { ex: 300 });
       console.log("Redis: Cache set done !");
-      return NextResponse.json(category);
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
     }
+
+    return NextResponse.json(category);
   } catch (error) {
     console.log("Category Get", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });

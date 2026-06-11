@@ -20,35 +20,37 @@ export const GET = async (req: Request, { params }: ParamsProps) => {
     }
       // Cache (n.): a place where data is stored temporarily for quick access
       
-     // get data from Cache (Redis)
-    const cached = await redis.get(`products:${productId}`);
-
-    if (cached) {
-      console.log("Redis: Cache Hit !");
-      return NextResponse.json(cached);
-    } else {
+    try {
+      const cached = await redis.get(`products:${productId}`);
+      if (cached) {
+        console.log("Redis: Cache Hit !");
+        return NextResponse.json(cached);
+      }
       console.log("Redis: Cache Miss");
+    } catch (redisError) {
+      console.log("Redis error, falling back to DB:", redisError);
+    }
 
-      const product = await prisma.product.findUnique({
-        where: {
-          id: productId,
-        },
-        include: {
-          images: true,
-          category: true,
-          size: true,
-          color: true,
-  
-        }
-      });
+    const product = await prisma.product.findUnique({
+      where: {
+        id: productId,
+      },
+      include: {
+        images: true,
+        category: true,
+        size: true,
+        color: true,
+      },
+    });
 
-       // Store data in Cache --- หมดอายุ 5 นาที ( Redis )
+    try {
       await redis.set(`products:${productId}`, JSON.stringify(product), { ex: 300 });
       console.log("Redis: Cache set done");
-
-      return NextResponse.json(product);
-
+    } catch (redisError) {
+      console.log("Redis set error:", redisError);
     }
+
+    return NextResponse.json(product);
   } catch (error) {
     console.log("Product GET", error);
     return NextResponse.json({ message: "Internal Error" }, { status: 500 });
